@@ -60,4 +60,12 @@ public class Login extends AppCompatActivity {
                 break;
         }
     }
+
+    public void onPause() {
+        if(textToSpeech != null){
+            textToSpeech.stop();
+            textToSpeech.stop();
+        }
+        super.onPause();
+    }
 }
