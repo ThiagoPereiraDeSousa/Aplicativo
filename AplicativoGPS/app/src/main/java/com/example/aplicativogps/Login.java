@@ -15,7 +15,7 @@ import java.util.Locale;
 
 public class Login extends AppCompatActivity {
     TextToSpeech textToSpeech;
-    private final int ID_TEXTO_PARA_VOZ = 100;
+    //private final int ID_TEXTO_PARA_VOZ = 100;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,7 +35,7 @@ public class Login extends AppCompatActivity {
         Toast.makeText(getApplicationContext(), textoInicial, Toast.LENGTH_SHORT).show();
         textToSpeech.speak(textoInicial, TextToSpeech.QUEUE_FLUSH, null);
 
-        Intent iVoz = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        /*Intent iVoz = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         iVoz.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         iVoz.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
         iVoz.putExtra(RecognizerIntent.EXTRA_PROMPT, "Diga seu nome: ");
@@ -44,10 +44,10 @@ public class Login extends AppCompatActivity {
             startActivityForResult(iVoz, ID_TEXTO_PARA_VOZ);
         } catch (ActivityNotFoundException e) {
             Toast.makeText(getApplicationContext(), "ERRO!!!!!!!!" + e, Toast.LENGTH_SHORT).show();
-        }
+        }*/
     }
 
-    @Override
+    /*@Override
     protected void onActivityResult(int id, int resultCodeId, Intent dados) {
         super.onActivityResult(id, resultCodeId, dados);
         switch (id) {
@@ -59,7 +59,7 @@ public class Login extends AppCompatActivity {
                 }
                 break;
         }
-    }
+    }*/
 
     public void onPause() {
         if(textToSpeech != null){
