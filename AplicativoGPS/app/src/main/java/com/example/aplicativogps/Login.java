@@ -7,47 +7,36 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
-import android.util.proto.ProtoOutputStream;
+import android.util.Log;
 import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
-public class Login extends AppCompatActivity {
-    TextToSpeech textToSpeech;
-    //private final int ID_TEXTO_PARA_VOZ = 100;
+public class Login extends AppCompatActivity implements TextToSpeech.OnInitListener{
+    private TextToSpeech TTS;
+
+    private final int ID_TEXTO_PARA_VOZ = 100;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        textToSpeech = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
-            @Override
-            public void onInit(int status) {
-                if (status != TextToSpeech.ERROR) {
-                    textToSpeech.setLanguage(Locale.getDefault());
-                }
-            }
-        });
-
-        String textoInicial = "Olá! Informe seu nome para fazer nossas configurações internas.";
-        Toast.makeText(getApplicationContext(), textoInicial, Toast.LENGTH_SHORT).show();
-        textToSpeech.speak(textoInicial, TextToSpeech.QUEUE_FLUSH, null);
-
-        /*Intent iVoz = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        iVoz.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-        iVoz.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
-        iVoz.putExtra(RecognizerIntent.EXTRA_PROMPT, "Diga seu nome: ");
+        TTS = new TextToSpeech(this,this);
+        SpeechOut("Olá! Informe seu nome para fazer nossas configurações internas.");
 
         try {
-            startActivityForResult(iVoz, ID_TEXTO_PARA_VOZ);
-        } catch (ActivityNotFoundException e) {
-            Toast.makeText(getApplicationContext(), "ERRO!!!!!!!!" + e, Toast.LENGTH_SHORT).show();
-        }*/
+            Thread.sleep(10000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        ListenSound();
+
     }
 
-    /*@Override
+    @Override
     protected void onActivityResult(int id, int resultCodeId, Intent dados) {
         super.onActivityResult(id, resultCodeId, dados);
         switch (id) {
@@ -59,13 +48,48 @@ public class Login extends AppCompatActivity {
                 }
                 break;
         }
-    }*/
+    }
 
     public void onPause() {
-        if(textToSpeech != null){
-            textToSpeech.stop();
-            textToSpeech.stop();
+        if(TTS != null){
+            TTS.stop();
+            TTS.stop();
         }
         super.onPause();
+    }
+
+    @Override
+    public void onInit(int status) {
+        if(status == TextToSpeech.SUCCESS)
+        {
+            int result = TTS.setLanguage(Locale.getDefault());
+            if(result == TextToSpeech.LANG_NOT_SUPPORTED || result ==TextToSpeech.LANG_MISSING_DATA)
+            {
+                Log.e("TTS", "Idioma não suportado");
+            }else{
+                SpeechOut("Olá! Informe seu nome para fazer nossas configurações internas.");
+            }
+        }else {
+            Log.e("TTS","Inicialização falhou...");
+        }
+    }
+    private void SpeechOut(String texto)
+    {
+        Toast.makeText(getApplicationContext(), "OLÁ", Toast.LENGTH_SHORT);
+        TTS.speak(texto,TextToSpeech.QUEUE_FLUSH,null);
+    }
+
+    private void ListenSound(){
+        Intent iVoz = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        iVoz.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        iVoz.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
+        iVoz.putExtra(RecognizerIntent.EXTRA_PROMPT, "Diga seu nome: ");
+
+        try {
+            startActivityForResult(iVoz, ID_TEXTO_PARA_VOZ);
+        } catch (ActivityNotFoundException e) {
+            String erro = "ERRO " + e;
+            SpeechOut(erro);
+        }
     }
 }
