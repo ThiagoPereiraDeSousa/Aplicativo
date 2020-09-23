@@ -6,6 +6,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
+import android.view.Menu;
 import android.widget.Toast;
 
 import java.util.Locale;
@@ -28,6 +29,6 @@ public class MainActivity extends Activity {
             startActivity(it);
         }
 
-
     }
+
 }

@@ -7,7 +7,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
+import android.view.Menu;
 import android.widget.Toast;
+
 
 import java.util.ArrayList;
 import java.util.Locale;
@@ -59,5 +61,7 @@ public class Mapa extends AppCompatActivity {
                 break;
         }
     }
+
+
 
 }

@@ -8,6 +8,8 @@ import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -92,4 +94,26 @@ public class Login extends AppCompatActivity implements TextToSpeech.OnInitListe
             SpeechOut(erro);
         }
     }
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if (id == R.id.home){
+            Intent i = new Intent(getApplicationContext(),MainActivity.class);
+            startActivity(i);
+        }
+        if (id == R.id.maps){
+            Intent i = new Intent(getApplicationContext(),MapsActivity.class);
+            startActivity(i);
+        }
+
+        if (id == R.id.sair){
+            finish();
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+
 }
