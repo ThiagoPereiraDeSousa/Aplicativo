@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
@@ -27,14 +28,16 @@ public class Login extends AppCompatActivity implements TextToSpeech.OnInitListe
         setContentView(R.layout.activity_login);
 
         TTS = new TextToSpeech(this,this);
-        SpeechOut("Olá! Informe seu nome para fazer nossas configurações internas.");
+        SpeechOut("Olá! Informe seu nome para fazer nossas configurações iniciais*.");
 
-        try {
-            Thread.sleep(10000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        ListenSound();
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                ListenSound();
+            }
+        }, 6000);
+
 
     }
 
