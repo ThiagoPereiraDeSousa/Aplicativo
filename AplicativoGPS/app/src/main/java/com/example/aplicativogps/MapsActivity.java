@@ -5,13 +5,17 @@ import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -26,9 +30,11 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.ArrayList;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationListener {
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationListener, GoogleMap.OnMapClickListener {
+
 
     private GoogleMap mMap;
+
     private Marker currentLocationMaker;
     private LatLng currentLocationLatLong;
 
@@ -55,6 +61,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        mMap.setOnMapClickListener(this);
+        mMap.getUiSettings().setZoomControlsEnabled(true);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        mMap.setMyLocationEnabled(true);
 
         // Add a marker in Sydney and move the camera
         LatLng recife = new LatLng(-8.065638, -34.891130);
@@ -67,7 +86,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onLocationChanged(Location location) {
-        if (currentLocationMaker != null){
+
+        if (currentLocationMaker != null) {
             currentLocationMaker.remove();
         }
         //Add marker
@@ -82,9 +102,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         CameraPosition cameraPosition = new CameraPosition.Builder().zoom(15).target(currentLocationLatLong).build();
         mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
 
-        Toast.makeText(this,"Localização atualizada", Toast.LENGTH_SHORT).show();
-    }
+        Toast.makeText(this, "Localização atualizada", Toast.LENGTH_SHORT).show();
 
+    }
 
     private void startGettingLocations() {
 
@@ -100,8 +120,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         ArrayList<String> permissions = new ArrayList<>();
         ArrayList<String> permissionsToRequest;
 
-        permissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
-        permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+        permissions.add(android.Manifest.permission.ACCESS_FINE_LOCATION);
+        permissions.add(android.Manifest.permission.ACCESS_COARSE_LOCATION);
         permissionsToRequest = findUnAskedPermissions(permissions);
 
         //Check if GPS and Network are on, if not asks the user to turn on
@@ -119,21 +139,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 }
             }
         }
-        //Check if GPS and Network are on, if not asks the user to turn on
-        if (!isGPS && !isNetwork) {
-            showSettingsAlert();
-        } else {
-            // check permissions
 
-            // check permissions for later versions
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                if (permissionsToRequest.size() > 0) {
-                    requestPermissions(permissionsToRequest.toArray(new String[permissionsToRequest.size()]),
-                            ALL_PERMISSIONS_RESULT);
-                    canGetLocation = false;
-                }
-            }
-        }
+
         //Checks if FINE LOCATION and COARSE Location were granted
         if (ActivityCompat.checkSelfPermission(this,
                 android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
@@ -191,9 +198,29 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1);
     }
 
-    private void showSettingsAlert() {
+    public void showSettingsAlert() {
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
+        alertDialog.setTitle("GPS desativado!");
+        alertDialog.setMessage("Ativar GPS?");
+        alertDialog.setPositiveButton("Sim", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                startActivity(intent);
+            }
+        });
 
+        alertDialog.setNegativeButton("Não", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+
+        alertDialog.show();
     }
 
 
+    @Override
+    public void onMapClick(LatLng latLng) {
+        Toast.makeText(getApplicationContext(), "Coordenadas: " + latLng.toString(), Toast.LENGTH_SHORT).show();
+    }
 }
