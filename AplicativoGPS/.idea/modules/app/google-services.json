@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "877343833815",
+    "firebase_url": "https://aplicativo-gps.firebaseio.com",
+    "project_id": "aplicativo-gps",
+    "storage_bucket": "aplicativo-gps.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:877343833815:android:421e9a1727d55110defa92",
+        "android_client_info": {
+          "package_name": "com.example.aplicativogps"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "877343833815-2kp3c7h8bmhim3ofkl4eu2pmgg5ih107.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.aplicativogps",
+            "certificate_hash": "62c03dd8586b56538b6d2e834512e17eece06064"
+          }
+        },
+        {
+          "client_id": "877343833815-0pmac9ao5klvvctvkn62u2afrd23oj6j.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB3h9KzsrqG7JkWh3Ugh80ptiDxRBzhTUo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "877343833815-0pmac9ao5klvvctvkn62u2afrd23oj6j.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

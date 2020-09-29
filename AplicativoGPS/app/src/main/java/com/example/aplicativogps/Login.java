@@ -13,22 +13,26 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import java.util.ArrayList;
 import java.util.Locale;
-import java.util.concurrent.TimeUnit;
 
-public class Login extends AppCompatActivity implements TextToSpeech.OnInitListener{
+public class Login extends AppCompatActivity implements TextToSpeech.OnInitListener {
     private TextToSpeech TTS;
-
     private final int ID_TEXTO_PARA_VOZ = 100;
+    private DatabaseReference mDataBase;
+    private LoginDAO loginDAO = new LoginDAO();
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        TTS = new TextToSpeech(this,this);
-        SpeechOut("Olá! Informe seu nome para fazer nossas configurações iniciais*.");
+        mDataBase = FirebaseDatabase.getInstance().getReference();
+        TTS = new TextToSpeech(this, this);
+        SpeechOut("Olá! Qual o seu nome?");
 
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
@@ -37,7 +41,6 @@ public class Login extends AppCompatActivity implements TextToSpeech.OnInitListe
                 ListenSound();
             }
         }, 6000);
-
 
     }
 
@@ -49,14 +52,15 @@ public class Login extends AppCompatActivity implements TextToSpeech.OnInitListe
                 if (resultCodeId == RESULT_OK && null != dados) {
                     ArrayList<String> result = dados.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
                     String ditado = result.get(0);
-                    Toast.makeText(getApplicationContext(), ditado, Toast.LENGTH_SHORT).show();
+
+                    ValidaLogin(ditado);
                 }
                 break;
         }
     }
 
     public void onPause() {
-        if(TTS != null){
+        if (TTS != null) {
             TTS.stop();
             TTS.stop();
         }
@@ -65,26 +69,23 @@ public class Login extends AppCompatActivity implements TextToSpeech.OnInitListe
 
     @Override
     public void onInit(int status) {
-        if(status == TextToSpeech.SUCCESS)
-        {
+        if (status == TextToSpeech.SUCCESS) {
             int result = TTS.setLanguage(Locale.getDefault());
-            if(result == TextToSpeech.LANG_NOT_SUPPORTED || result ==TextToSpeech.LANG_MISSING_DATA)
-            {
+            if (result == TextToSpeech.LANG_NOT_SUPPORTED || result == TextToSpeech.LANG_MISSING_DATA) {
                 Log.e("TTS", "Idioma não suportado");
-            }else{
-                SpeechOut("Olá! Informe seu nome para fazer nossas configurações internas.");
+            } else {
+                SpeechOut("Olá! Informe seu nome para fazer nossas configurações iniciais.");
             }
-        }else {
-            Log.e("TTS","Inicialização falhou...");
+        } else {
+            Log.e("TTS", "Inicialização falhou...");
         }
     }
-    private void SpeechOut(String texto)
-    {
-        Toast.makeText(getApplicationContext(), "OLÁ", Toast.LENGTH_SHORT);
-        TTS.speak(texto,TextToSpeech.QUEUE_FLUSH,null);
+
+    private void SpeechOut(String texto) {
+        TTS.speak(texto, TextToSpeech.QUEUE_FLUSH, null);
     }
 
-    private void ListenSound(){
+    private void ListenSound() {
         Intent iVoz = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         iVoz.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         iVoz.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
@@ -97,26 +98,51 @@ public class Login extends AppCompatActivity implements TextToSpeech.OnInitListe
             SpeechOut(erro);
         }
     }
+
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
+
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        if (id == R.id.home){
-            Intent i = new Intent(getApplicationContext(),MainActivity.class);
+        if (id == R.id.home) {
+            Intent i = new Intent(getApplicationContext(), MainActivity.class);
             startActivity(i);
         }
-        if (id == R.id.maps){
-            Intent i = new Intent(getApplicationContext(),MapsActivity.class);
+        if (id == R.id.maps) {
+            Intent i = new Intent(getApplicationContext(), MapsActivity.class);
             startActivity(i);
         }
 
-        if (id == R.id.sair){
+        if (id == R.id.sair) {
             finish();
         }
         return super.onOptionsItemSelected(item);
     }
 
+    private void ValidaLogin(String nomeUsuario) {
+        if (loginDAO.findUsers(nomeUsuario)) {
+            Intent it = new Intent(Login.this, Mapa.class);
+            startActivity(it);
+        } else {
+            SpeechOut("Hmmm, notamos que ainda não possui o login em nosso sistema! Aguarde um momento que iremos fazer o seu cadastro.");
+            try {
+                loginDAO.insereUsuario(nomeUsuario);
+            }catch (Exception ex){
+                SpeechOut("Ocorreu um erro ao tentar realizar o cadastro! Tente mais tarde por favor!");
+                return;
+            }
+
+            Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    Intent it = new Intent(Login.this, Mapa.class);
+                    startActivity(it);
+                }
+            }, 6100);
+        }
+    }
 
 }
