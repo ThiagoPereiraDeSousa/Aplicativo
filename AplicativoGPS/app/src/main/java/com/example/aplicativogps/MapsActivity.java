@@ -6,6 +6,7 @@ import androidx.fragment.app.FragmentActivity;
 
 import android.Manifest;
 import android.app.AlertDialog;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -13,9 +14,12 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.http.HttpResponseCache;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.speech.RecognizerIntent;
+import android.speech.tts.TextToSpeech;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -29,9 +33,12 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationListener, GoogleMap.OnMapClickListener {
+    TextToSpeech textToSpeech;
 
+    private final int ID_TEXTO_PARA_VOZ = 100;
 
     private GoogleMap mMap;
 
@@ -47,6 +54,28 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         startGettingLocations();
+        textToSpeech = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+                if(status != TextToSpeech.ERROR){
+                    textToSpeech.setLanguage(Locale.getDefault());
+                }
+            }
+        });
+        String textoInicial = "Olá! Para onde deseja ir?";
+        Toast.makeText(getApplicationContext(), textoInicial, Toast.LENGTH_SHORT).show();
+        textToSpeech.speak(textoInicial, TextToSpeech.QUEUE_FLUSH, null);
+
+        Intent iVoz = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        iVoz.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        iVoz.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
+        iVoz.putExtra(RecognizerIntent.EXTRA_PROMPT, "Me diga o seu destino: ");
+
+        try {
+            startActivityForResult(iVoz, ID_TEXTO_PARA_VOZ);
+        } catch (ActivityNotFoundException e) {
+            Toast.makeText(getApplicationContext(), "ERRO!!!!!!!!" + e, Toast.LENGTH_SHORT).show();
+        }
     }
 
     /**
@@ -59,6 +88,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      * installed Google Play services and returned to the app.
      */
     @Override
+
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         mMap.setOnMapClickListener(this);
@@ -76,14 +106,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.setMyLocationEnabled(true);
 
         // Add a marker in Sydney and move the camera
-        LatLng recife = new LatLng(-8.065638, -34.891130);
-        mMap.addMarker(new MarkerOptions().position(recife).title("Recife"));
 
-        CameraPosition cameraPosition = new CameraPosition.Builder().zoom(15).target(recife).build();
-
-        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
     }
 
+    private void marcador(double lngt, double lat){
+        LatLng destino = new LatLng(lngt, lat);
+        mMap.addMarker(new MarkerOptions().position(destino));
+
+    }
     @Override
     public void onLocationChanged(Location location) {
 
@@ -219,8 +249,25 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
+
+
     @Override
     public void onMapClick(LatLng latLng) {
         Toast.makeText(getApplicationContext(), "Coordenadas: " + latLng.toString(), Toast.LENGTH_SHORT).show();
     }
+
+    @Override
+    protected void onActivityResult(int id, int resultCodeId, Intent dados) {
+        super.onActivityResult(id, resultCodeId, dados);
+        switch (id) {
+            case ID_TEXTO_PARA_VOZ:
+                if (resultCodeId == RESULT_OK && null != dados) {
+                    ArrayList<String> result = dados.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                    String ditado = result.get(0);
+                    Toast.makeText(getApplicationContext(), ditado, Toast.LENGTH_SHORT).show();
+                }
+                break;
+        }
+    }
+
 }
