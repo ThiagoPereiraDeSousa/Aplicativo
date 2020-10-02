@@ -15,11 +15,13 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.http.HttpResponseCache;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
+import android.webkit.HttpAuthHandler;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -267,6 +269,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     Toast.makeText(getApplicationContext(), ditado, Toast.LENGTH_SHORT).show();
                 }
                 break;
+        }
+    }
+
+    private  class GetCoordinates extends AsyncTask<String, Void, String>{
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            ///COLOCAR PRA FALAR COM O USUARIO PRA ESPERAR!!!!!!
+        }
+
+        @Override
+        protected String doInBackground(String... strings) {
+            String response;
+            try {
+                String address = strings[0];
+                //PAREI AQUI!!!!!
+            }catch (Exception e ){
+                
+            }
+            return "";
         }
     }
 
