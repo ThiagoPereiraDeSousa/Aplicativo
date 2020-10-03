@@ -278,7 +278,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     ArrayList<String> result = dados.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
                     String ditado = result.get(0);
                     if (checkInternetConection()) {
-                        new GetCoordinates().execute("https://maps.googleapis.com/maps/api/geocode/json?address=%s", ditado);
+                        new GetCoordinates().execute("https://maps.googleapis.com/maps/api/geocode/json?address=%s&key=AIzaSyCmKgdln40M3vafPHW8e0Cr9jwozDOB2tE", ditado);
                     } else {
                         //colocar pra falar q nao tem internet
                     }
