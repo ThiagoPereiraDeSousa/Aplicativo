@@ -2,6 +2,10 @@ package com.example.aplicativogps;
 
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -14,7 +18,7 @@ import java.util.Map;
 
 public class LoginDAO {
     private DatabaseReference mDataBase;
-    private boolean retorno;
+    private boolean retorno = false;
     private int retornoId;
 
     public LoginDAO() {
@@ -26,8 +30,13 @@ public class LoginDAO {
         mDataBase.child("login").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.getValue() != null)
-                    retorno = getAllUsers((Map<String, String>) dataSnapshot.getValue(), usuario);
+                for (DataSnapshot objSnapShot : dataSnapshot.getChildren()) {
+                    for (DataSnapshot childSnp : objSnapShot.getChildren()){
+                        if (usuario == childSnp.getValue()) {
+                            retorno = true;
+                        }
+                    }
+                }
             }
 
             @Override
@@ -40,31 +49,33 @@ public class LoginDAO {
 
     public boolean insereUsuario(String nomeUsuario) {
         try {
-            Integer resposta = getLastId();
-            mDataBase.child("login").child(String.valueOf(1)).child("nome").setValue(nomeUsuario);
+            mDataBase.child("login").child(String.valueOf(getLastId() + 1)).child("nome").setValue(nomeUsuario);
             return true;
         } catch (Exception e) {
             return false;
         }
     }
 
-    private boolean getAllUsers(Map<String, String> users, String usuarioParam) {
-        for (Map.Entry<String, String> entry : users.entrySet()) {
-            String usuario = entry.getValue();
-            if (usuario == usuarioParam) {
-                return true;
-            }
-        }
-        return false;
-    }
-    private int getLastId(){
-        mDataBase.child("login").orderByKey().limitToLast(1).addListenerForSingleValueEvent(new ValueEventListener() {
+    private int getLastId() {
+
+        mDataBase.child("login").orderByKey().limitToLast(1).addChildEventListener(new ChildEventListener() {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.getValue() != null){
-                    getId((Map<String, String>) dataSnapshot.getValue());
-                    retornoId = 0;
-                }
+            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                retornoId = Integer.parseInt(dataSnapshot.getKey());
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
 
             }
 
@@ -73,13 +84,7 @@ public class LoginDAO {
 
             }
         });
-        return  retornoId;
-    }
-    private boolean getId(Map<String, String> users) {
-        for (Map.Entry<String, String> entry : users.entrySet()) {
-            String usuario = entry.getValue();
-        }
-        return false;
+        return retornoId;
     }
 
 }
