@@ -14,6 +14,8 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.http.HttpResponseCache;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -22,6 +24,7 @@ import android.provider.Settings;
 import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
 import android.webkit.HttpAuthHandler;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -34,6 +37,15 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Locale;
 
@@ -59,7 +71,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         textToSpeech = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
             @Override
             public void onInit(int status) {
-                if(status != TextToSpeech.ERROR){
+                if (status != TextToSpeech.ERROR) {
                     textToSpeech.setLanguage(Locale.getDefault());
                 }
             }
@@ -111,11 +123,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
-    private void marcador(double lngt, double lat){
+    private void marcador(double lngt, double lat) {
         LatLng destino = new LatLng(lngt, lat);
         mMap.addMarker(new MarkerOptions().position(destino));
 
     }
+
     @Override
     public void onLocationChanged(Location location) {
 
@@ -251,8 +264,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
-
-
     @Override
     public void onMapClick(LatLng latLng) {
         Toast.makeText(getApplicationContext(), "Coordenadas: " + latLng.toString(), Toast.LENGTH_SHORT).show();
@@ -266,30 +277,90 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 if (resultCodeId == RESULT_OK && null != dados) {
                     ArrayList<String> result = dados.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
                     String ditado = result.get(0);
-                    Toast.makeText(getApplicationContext(), ditado, Toast.LENGTH_SHORT).show();
+                    if (checkInternetConection()) {
+                        new GetCoordinates().execute("https://maps.googleapis.com/maps/api/geocode/json?address=%s", ditado);
+                    } else {
+                        //colocar pra falar q nao tem internet
+                    }
                 }
                 break;
         }
     }
 
-    private  class GetCoordinates extends AsyncTask<String, Void, String>{
+    public boolean checkInternetConection() {
+        ConnectivityManager connMgr = (ConnectivityManager)
+                getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+        if (networkInfo != null && networkInfo.isConnected()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public void mostrarJSONPessoas(String strjson) {
+        String data = "";
+        try {
+            JSONObject jsonObject = new JSONObject(strjson);
+
+            String lat = ((JSONArray) jsonObject.get("results")).getJSONObject(0).getJSONObject("geometry")
+                    .getJSONObject("location").get("lat").toString();
+
+            String lng = ((JSONArray) jsonObject.get("results")).getJSONObject(0).getJSONObject("geometry")
+                    .getJSONObject("location").get("lng").toString();
+
+            Toast.makeText(getApplicationContext(), "Latitude: " + lat, Toast.LENGTH_LONG);
+            Toast.makeText(getApplicationContext(), "Longitude: " + lng, Toast.LENGTH_LONG);
+        } catch (JSONException e) {
+            Toast.makeText(getApplicationContext(), "Erro:  " + e, Toast.LENGTH_LONG);
+        }
+    }
+
+    private class GetCoordinates extends AsyncTask<String, Void, String> {
 
         @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            ///COLOCAR PRA FALAR COM O USUARIO PRA ESPERAR!!!!!!
+        protected String doInBackground(String... params) {
+            // params é um vetor onde params[0] é a URL
+            try {
+                return downloadJSON(params[0]);
+            } catch (IOException e) {
+                return "URL inválido";
+            }
         }
 
+        // onPostExecute exibe o resultado do AsyncTask
         @Override
-        protected String doInBackground(String... strings) {
-            String response;
+        protected void onPostExecute(String result) {
+            mostrarJSONPessoas(result);
+        }
+
+        private String downloadJSON(String myurl) throws IOException {
+            InputStream is = null;
+            String respostaHttp = "";
+            HttpURLConnection conn = null;
+            InputStream in = null;
+            ByteArrayOutputStream bos = null;
             try {
-                String address = strings[0];
-                //PAREI AQUI!!!!!
-            }catch (Exception e ){
-                
+                URL u = new URL(myurl);
+                conn = (HttpURLConnection) u.openConnection();
+                conn.setConnectTimeout(7000); // 7 segundos de timeout
+                conn.setRequestMethod("GET");
+                conn.setDoInput(true);
+                conn.connect();
+                in = conn.getInputStream();
+                bos = new ByteArrayOutputStream();
+                byte[] buffer = new byte[1024];
+                int len;
+                while ((len = in.read(buffer)) > 0) {
+                    bos.write(buffer, 0, len);
+                }
+                respostaHttp = bos.toString("UTF-8");
+                return respostaHttp;
+            } catch (Exception ex) {
+                return "URL inválido ou estouro de memória ou...: \n" + ex.getMessage() + "\nmyurl: " + myurl;
+            } finally {
+                if (in != null) in.close();
             }
-            return "";
         }
     }
 
