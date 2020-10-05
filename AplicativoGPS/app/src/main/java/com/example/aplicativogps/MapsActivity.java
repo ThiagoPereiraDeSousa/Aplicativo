@@ -126,7 +126,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private void marcador(double lng, double lat) {
         LatLng destino = new LatLng(lng, lat);
         mMap.addMarker(new MarkerOptions().position(destino));
-
+        CameraPosition cameraPosition = new CameraPosition.Builder().zoom(15).target(currentLocationLatLong).build();
+        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
     }
 
     @Override
