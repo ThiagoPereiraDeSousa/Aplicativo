@@ -123,8 +123,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
-    private void marcador(double lngt, double lat) {
-        LatLng destino = new LatLng(lngt, lat);
+    private void marcador(double lng, double lat) {
+        LatLng destino = new LatLng(lng, lat);
         mMap.addMarker(new MarkerOptions().position(destino));
 
     }
