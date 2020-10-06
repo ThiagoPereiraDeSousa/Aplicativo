@@ -22,7 +22,7 @@ public class Login extends AppCompatActivity implements TextToSpeech.OnInitListe
     private TextToSpeech TTS;
     private final int ID_TEXTO_PARA_VOZ = 100;
     private DatabaseReference mDataBase;
-    private LoginDAO loginDAO = new LoginDAO();
+    //private LoginDaoHelper loginDAO = new LoginDaoHelper(getApplicationContext());
 
 
     @Override
@@ -74,7 +74,7 @@ public class Login extends AppCompatActivity implements TextToSpeech.OnInitListe
             if (result == TextToSpeech.LANG_NOT_SUPPORTED || result == TextToSpeech.LANG_MISSING_DATA) {
                 Log.e("TTS", "Idioma não suportado");
             } else {
-                SpeechOut("Olá! Informe seu nome para fazer nossas configurações iniciais.");
+                SpeechOut("Olá! Qual o seu nome?");
             }
         } else {
             Log.e("TTS", "Inicialização falhou...");
@@ -122,11 +122,12 @@ public class Login extends AppCompatActivity implements TextToSpeech.OnInitListe
     }
 
     private void ValidaLogin(String nomeUsuario) {
-        if (loginDAO.findUsers(nomeUsuario)) {
+        LoginDaoHelper loginDAO = new LoginDaoHelper(getApplicationContext());
+        if (loginDAO.findUser(nomeUsuario)) {
             Intent it = new Intent(Login.this, Mapa.class);
             startActivity(it);
         } else {
-            SpeechOut("Hmmm, notamos que ainda não possui o login em nosso sistema! Aguarde um momento que iremos fazer o seu cadastro.");
+            SpeechOut("Notamos que ainda não possui o login em nosso sistema! Aguarde um momento que iremos fazer o seu cadastro.");
             try {
                 loginDAO.insereUsuario(nomeUsuario);
             }catch (Exception ex){

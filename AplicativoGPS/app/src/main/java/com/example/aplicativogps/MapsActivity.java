@@ -310,6 +310,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             String lng = ((JSONArray) jsonObject.get("results")).getJSONObject(0).getJSONObject("geometry")
                     .getJSONObject("location").get("lng").toString();
 
+            marcador(Double.parseDouble(lng), Double.parseDouble(lat));
+
             Toast.makeText(getApplicationContext(), "Latitude: " + lat, Toast.LENGTH_LONG);
             Toast.makeText(getApplicationContext(), "Longitude: " + lng, Toast.LENGTH_LONG);
         } catch (JSONException e) {

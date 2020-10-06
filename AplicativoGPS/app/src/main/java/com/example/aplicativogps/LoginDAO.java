@@ -1,5 +1,7 @@
 package com.example.aplicativogps;
 
+import android.content.Intent;
+import android.os.Handler;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -47,9 +49,14 @@ public class LoginDAO {
         return retorno;
     }
 
-    public boolean insereUsuario(String nomeUsuario) {
+    public boolean insereUsuario(final String nomeUsuario) {
         try {
-            mDataBase.child("login").child(String.valueOf(getLastId() + 1)).child("nome").setValue(nomeUsuario);
+            Integer retorninho = getLastId();
+
+            Thread.sleep(3000);
+
+            mDataBase.child("login").child(String.valueOf(retorninho + 1)).child("nome").setValue(nomeUsuario);
+
             return true;
         } catch (Exception e) {
             return false;
@@ -58,25 +65,14 @@ public class LoginDAO {
 
     private int getLastId() {
 
-        mDataBase.child("login").orderByKey().limitToLast(1).addChildEventListener(new ChildEventListener() {
+        mDataBase.child("login").orderByKey().limitToLast(1).addValueEventListener(new ValueEventListener() {
             @Override
-            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                retornoId = Integer.parseInt(dataSnapshot.getKey());
-            }
-
-            @Override
-            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
-            }
-
-            @Override
-            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-
-            }
-
-            @Override
-            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for (DataSnapshot objSnp: dataSnapshot.getChildren() ) {
+                    for (DataSnapshot chilçSnp: dataSnapshot.getChildren()) {
+                        retornoId = Integer.parseInt(chilçSnp.getKey());
+                    }
+                }
             }
 
             @Override
