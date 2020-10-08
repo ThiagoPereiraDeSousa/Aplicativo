@@ -124,10 +124,10 @@ public class Login extends AppCompatActivity implements TextToSpeech.OnInitListe
     private void ValidaLogin(String nomeUsuario) {
         LoginDaoHelper loginDAO = new LoginDaoHelper(getApplicationContext());
         if (loginDAO.findUser(nomeUsuario)) {
-            Intent it = new Intent(Login.this, Mapa.class);
+            Intent it = new Intent(Login.this, MapsActivity.class);
             startActivity(it);
         } else {
-            SpeechOut("Notamos que ainda não possui o login em nosso sistema! Aguarde um momento que iremos fazer o seu cadastro.");
+            SpeechOut("Notamos que ainda não possui o login em nosso sistema! Aguarde um momento.");
             try {
                 loginDAO.insereUsuario(nomeUsuario);
             }catch (Exception ex){
@@ -139,7 +139,7 @@ public class Login extends AppCompatActivity implements TextToSpeech.OnInitListe
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    Intent it = new Intent(Login.this, Mapa.class);
+                    Intent it = new Intent(Login.this, MapsActivity.class);
                     startActivity(it);
                 }
             }, 6100);

@@ -16,13 +16,16 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.net.http.HttpResponseCache;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.Settings;
 import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
+import android.util.Log;
 import android.webkit.HttpAuthHandler;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -49,8 +52,8 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Locale;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationListener, GoogleMap.OnMapClickListener {
-    TextToSpeech textToSpeech;
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationListener, GoogleMap.OnMapClickListener, TextToSpeech.OnInitListener {
+    private TextToSpeech TTS;
 
     private final int ID_TEXTO_PARA_VOZ = 100;
 
@@ -68,28 +71,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         startGettingLocations();
-        textToSpeech = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
+
+        TTS = new TextToSpeech(this, this);
+
+        SpeechOut("Para onde deseja ir?");
+
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
             @Override
-            public void onInit(int status) {
-                if (status != TextToSpeech.ERROR) {
-                    textToSpeech.setLanguage(Locale.getDefault());
-                }
+            public void run() {
+                ListenSound();
             }
-        });
-        String textoInicial = "Olá! Para onde deseja ir?";
-        Toast.makeText(getApplicationContext(), textoInicial, Toast.LENGTH_SHORT).show();
-        textToSpeech.speak(textoInicial, TextToSpeech.QUEUE_FLUSH, null);
-
-        Intent iVoz = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        iVoz.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-        iVoz.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
-        iVoz.putExtra(RecognizerIntent.EXTRA_PROMPT, "Me diga o seu destino: ");
-
-        try {
-            startActivityForResult(iVoz, ID_TEXTO_PARA_VOZ);
-        } catch (ActivityNotFoundException e) {
-            Toast.makeText(getApplicationContext(), "ERRO!!!!!!!!" + e, Toast.LENGTH_SHORT).show();
-        }
+        }, 6000);
     }
 
     /**
@@ -124,10 +117,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void marcador(double lng, double lat) {
-        LatLng destino = new LatLng(lng, lat);
-        mMap.addMarker(new MarkerOptions().position(destino));
-        CameraPosition cameraPosition = new CameraPosition.Builder().zoom(15).target(currentLocationLatLong).build();
-        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+        //Add marker
+        currentLocationLatLong = new LatLng(lat, lng);
+        MarkerOptions markerOptions = new MarkerOptions();
+        markerOptions.position(currentLocationLatLong);
+        markerOptions.title("Localização desejada");
+        markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
+        currentLocationMaker = mMap.addMarker(markerOptions);
     }
 
     @Override
@@ -279,6 +275,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     ArrayList<String> result = dados.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
                     String ditado = result.get(0);
                     if (checkInternetConection()) {
+                        abreMaps(0D, 0D, ditado);
                         new GetCoordinates().execute("https://maps.googleapis.com/maps/api/geocode/json?address=%s&key=AIzaSyCmKgdln40M3vafPHW8e0Cr9jwozDOB2tE", ditado);
                     } else {
                         //colocar pra falar q nao tem internet
@@ -287,6 +284,47 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 break;
         }
     }
+
+    public void onPause() {
+        if (TTS != null) {
+            TTS.stop();
+            TTS.stop();
+        }
+        super.onPause();
+    }
+
+    @Override
+    public void onInit(int status) {
+        if (status == TextToSpeech.SUCCESS) {
+            int result = TTS.setLanguage(Locale.getDefault());
+            if (result == TextToSpeech.LANG_NOT_SUPPORTED || result == TextToSpeech.LANG_MISSING_DATA) {
+                Log.e("TTS", "Idioma não suportado");
+            } else {
+                SpeechOut("Para onde deseja ir?");
+            }
+        } else {
+            Log.e("TTS", "Inicialização falhou...");
+        }
+    }
+
+    private void SpeechOut(String texto) {
+        TTS.speak(texto, TextToSpeech.QUEUE_FLUSH, null);
+    }
+
+    private void ListenSound() {
+        Intent iVoz = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        iVoz.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        iVoz.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
+        iVoz.putExtra(RecognizerIntent.EXTRA_PROMPT, "Para onde deseja ir? ");
+
+        try {
+            startActivityForResult(iVoz, ID_TEXTO_PARA_VOZ);
+        } catch (ActivityNotFoundException e) {
+            String erro = "ERRO " + e;
+            SpeechOut(erro);
+        }
+    }
+
 
     public boolean checkInternetConection() {
         ConnectivityManager connMgr = (ConnectivityManager)
@@ -310,13 +348,25 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             String lng = ((JSONArray) jsonObject.get("results")).getJSONObject(0).getJSONObject("geometry")
                     .getJSONObject("location").get("lng").toString();
 
-            marcador(Double.parseDouble(lng), Double.parseDouble(lat));
+            //marcador(Double.parseDouble(lng), Double.parseDouble(lat));
+
+            //abreMaps(Double.parseDouble(lat), Double.parseDouble(lng));
 
             Toast.makeText(getApplicationContext(), "Latitude: " + lat, Toast.LENGTH_LONG);
             Toast.makeText(getApplicationContext(), "Longitude: " + lng, Toast.LENGTH_LONG);
         } catch (JSONException e) {
             Toast.makeText(getApplicationContext(), "Erro:  " + e, Toast.LENGTH_LONG);
         }
+    }
+
+    private void abreMaps(Double lat, Double lng, String endereco) {
+        final String ulrRoute = "https://maps.google.com?saddr=%s&daddr=%s";
+
+        Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(String.format(ulrRoute, "Rua Olho D'Água dos Borges", endereco)));
+
+        i.setClassName("com.google.android.apps.maps", "com.google.android.maps.MapsActivity");
+
+        startActivity(i);
     }
 
     private class GetCoordinates extends AsyncTask<String, Void, String> {
