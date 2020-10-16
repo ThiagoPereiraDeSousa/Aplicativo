@@ -11,7 +11,10 @@ public class HelperDb extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "db_login";   //nome do BD
 
     private static final String TABLE_CREATE = "create table " + TABELA +
-            " (nome String PRIMARY KEY);";
+            " (nome varchar(50) PRIMARY KEY, endereco varchar(100));";
+
+    private static final String SQL_DELETE_ENTRIES =
+            "DROP TABLE IF EXISTS " + TABELA;
 
     HelperDb(Context context) {
 

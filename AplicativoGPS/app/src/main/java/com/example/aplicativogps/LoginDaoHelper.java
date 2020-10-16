@@ -17,7 +17,6 @@ public class LoginDaoHelper {
     }
 
     public boolean findUser(String usuario) {
-
         Cursor cursor = db.query(HelperDb.TABELA, null, null, null, null, null, "nome");
         while (cursor.moveToNext()) {
             if (cursor.getString(0).equals(usuario)) {
@@ -27,10 +26,21 @@ public class LoginDaoHelper {
         return false;
     }
 
+    public String findAdress(String usuario){
+        Cursor cursor = db.query(HelperDb.TABELA, null, null, null, null, null, "nome");
+        while (cursor.moveToNext()) {
+            if (cursor.getString(0).equals(usuario)) {
+                return  cursor.getString(1);
+            }
+        }
+        return "";
+    }
+
     public boolean insereUsuario(String usuario) {
         try {
             ContentValues cv = new ContentValues();
             cv.put("nome", usuario);
+            cv.put("endereco", "");
 
             long id = db.insert("login", null, cv);
             if (id == -1) {
@@ -42,6 +52,19 @@ public class LoginDaoHelper {
             return false;
         } finally {
             if (db != null) db.close();
+        }
+    }
+
+    public boolean insereEndereco(String usuario, String endereco) {
+        try {
+            ContentValues values = new ContentValues();
+            values.put("nome",usuario);
+            values.put("endereco", endereco);
+
+            String[] whereArgs = new String[]{usuario};
+            return  (db.update("login",values, "nome=?", whereArgs) > 0);
+        } catch (Exception ex) {
+            return false;
         }
     }
 

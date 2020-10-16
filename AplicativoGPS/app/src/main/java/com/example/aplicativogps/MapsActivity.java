@@ -73,16 +73,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         startGettingLocations();
 
         TTS = new TextToSpeech(this, this);
+        //SpeechOut("Para onde deseja ir?");
 
-        SpeechOut("Para onde deseja ir?");
-
-        Handler handler = new Handler();
+        /*Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 ListenSound();
             }
-        }, 6000);
+        }, 6000);*/
     }
 
     /**
@@ -274,8 +273,26 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 if (resultCodeId == RESULT_OK && null != dados) {
                     ArrayList<String> result = dados.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
                     String ditado = result.get(0);
+                    Intent it = getIntent();
+                    LoginDaoHelper loginDao = new LoginDaoHelper(getApplicationContext());
                     if (checkInternetConection()) {
-                        abreMaps(0D, 0D, ditado);
+                        if (ditado.equalsIgnoreCase("sim")) {
+                            abreMaps(0D, 0D, loginDao.findAdress(it.getStringExtra("Nome")));
+                        } else if (ditado.equalsIgnoreCase("nao") || ditado.equalsIgnoreCase("não")) {
+                            SpeechOut("Para aonde deseja ir?");
+                            Handler handler = new Handler();
+                            handler.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    ListenSound();
+                                }
+                            }, 5000);
+
+                        } else {
+                            loginDao.insereEndereco(it.getStringExtra("Nome"), ditado);
+                            abreMaps(0D, 0D, ditado);
+                        }
+
                         new GetCoordinates().execute("https://maps.googleapis.com/maps/api/geocode/json?address=%s&key=AIzaSyCmKgdln40M3vafPHW8e0Cr9jwozDOB2tE", ditado);
                     } else {
                         //colocar pra falar q nao tem internet
@@ -300,14 +317,35 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             if (result == TextToSpeech.LANG_NOT_SUPPORTED || result == TextToSpeech.LANG_MISSING_DATA) {
                 Log.e("TTS", "Idioma não suportado");
             } else {
-                SpeechOut("Para onde deseja ir?");
+                Intent it = getIntent();
+                LoginDaoHelper loginDao = new LoginDaoHelper(getApplicationContext());
+                String adress = loginDao.findAdress(it.getStringExtra("Nome"));
+                if (!adress.equals("")) {
+                    SpeechOut("Deseja ir para o último destino?" + adress);
+                    Handler handler = new Handler();
+                    handler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            ListenSound();
+                        }
+                    }, 5000);
+                } else {
+                    SpeechOut("Para onde deseja ir?");
+                    Handler handler = new Handler();
+                    handler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            ListenSound();
+                        }
+                    }, 5000);
+                }
             }
         } else {
             Log.e("TTS", "Inicialização falhou...");
         }
     }
 
-    private void SpeechOut(String texto) {
+    public void SpeechOut(String texto) {
         TTS.speak(texto, TextToSpeech.QUEUE_FLUSH, null);
     }
 
