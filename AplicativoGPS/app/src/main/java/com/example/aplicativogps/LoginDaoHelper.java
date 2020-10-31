@@ -17,7 +17,7 @@ public class LoginDaoHelper {
     }
 
     public boolean findUser(String usuario) {
-        Cursor cursor = db.query(HelperDb.TABELA, null, null, null, null, null, "nome");
+        Cursor cursor = db.query(HelperDb.TABELA_LOGIN, null, null, null, null, null, "nome");
         while (cursor.moveToNext()) {
             if (cursor.getString(0).equals(usuario)) {
                 return true;
@@ -27,7 +27,7 @@ public class LoginDaoHelper {
     }
 
     public String findAdress(String usuario){
-        Cursor cursor = db.query(HelperDb.TABELA, null, null, null, null, null, "nome");
+        Cursor cursor = db.query(HelperDb.TABELA_LOGIN, null, null, null, null, null, "nome");
         while (cursor.moveToNext()) {
             if (cursor.getString(0).equals(usuario)) {
                 return  cursor.getString(1);
